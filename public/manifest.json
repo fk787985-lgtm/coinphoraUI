@@ -1,0 +1,21 @@
+{
+  "name": "XCrypto Trading App",
+  "short_name": "XCrypto",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#121821",
+  "theme_color": "#121821",
+  "description": "XCrypto Trading App — Track and manage your crypto trades effortlessly with real-time prices and order management.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
