@@ -25,6 +25,22 @@ const queryClient = new QueryClient({
   },
 });
 
+const clearLegacyClientCache = async () => {
+  if (typeof window === "undefined") return;
+
+  if ("serviceWorker" in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+  }
+
+  if ("caches" in window) {
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+  }
+};
+
+clearLegacyClientCache().catch(() => {});
+
 ReactDOM.createRoot(document.getElementById("root"))?.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
