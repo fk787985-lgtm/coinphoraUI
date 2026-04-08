@@ -10,7 +10,7 @@ import logo from "../../../assets/logo.png";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { openTawkChat } from "../../../components/TawkChatWidget";
+import { openTawkChat } from "../../../utils/tawkChat";
 
 const baseURL = import.meta.env.VITE_BASE_URL;
 

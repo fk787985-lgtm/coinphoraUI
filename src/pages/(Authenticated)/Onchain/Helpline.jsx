@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { openTawkChat } from "../../../components/TawkChatWidget";
+import { openTawkChat } from "../../../utils/tawkChat";
 
 const Helpline = () => {
   useEffect(() => {
