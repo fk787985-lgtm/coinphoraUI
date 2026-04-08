@@ -77,7 +77,7 @@ const NavbarHeader = ({ toggleDrawer, title }) => {
             onClick={toggleDrawer}
           />
           <h1 className="text-lg font-semibold text-white tracking-wide">
-            {t("OnChainBitTles")}
+            {t("Coinphora")}
           </h1>
         </div>
       ) : (

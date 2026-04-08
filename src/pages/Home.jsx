@@ -269,7 +269,7 @@ useEffect(() => {
             className="w-10 h-10 mx-auto mb-4"
           />
           <p className="mb-3">
-            © {new Date().getFullYear()} OnChainbittles. All rights reserved.
+            © {new Date().getFullYear()} Coinphora. All rights reserved.
           </p>
           <div className="flex justify-center gap-6 mb-4">
             <a href="#" className="hover:text-yellow-300">

@@ -2,11 +2,11 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
 const resources = {
-  en: { translation: { "OnChainBitTles": "OnChainBitTles", "Customer Support": "Customer Support", "Translate": "Translate" } },
-  es: { translation: { "OnChainBitTles": "OnChainBitTles", "Customer Support": "Soporte al cliente", "Translate": "Traducir" } },
-  fr: { translation: { "OnChainBitTles": "OnChainBitTles", "Customer Support": "Support client", "Translate": "Traduire" } },
-  de: { translation: { "OnChainBitTles": "OnChainBitTles", "Customer Support": "Kundendienst", "Translate": "Übersetzen" } },
-  zh: { translation: { "OnChainBitTles": "OnChainBitTles", "Customer Support": "客户支持", "Translate": "翻译" } },
+  en: { translation: { "Coinphora": "Coinphora", "Customer Support": "Customer Support", "Translate": "Translate" } },
+  es: { translation: { "Coinphora": "Coinphora", "Customer Support": "Soporte al cliente", "Translate": "Traducir" } },
+  fr: { translation: { "Coinphora": "Coinphora", "Customer Support": "Support client", "Translate": "Traduire" } },
+  de: { translation: { "Coinphora": "Coinphora", "Customer Support": "Kundendienst", "Translate": "Übersetzen" } },
+  zh: { translation: { "Coinphora": "Coinphora", "Customer Support": "客户支持", "Translate": "翻译" } },
 };
 
 i18n

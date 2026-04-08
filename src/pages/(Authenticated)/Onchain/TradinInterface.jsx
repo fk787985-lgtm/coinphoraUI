@@ -161,14 +161,14 @@ export default function TradingInterface() {
 
   return (
     <div className="relative flex flex-col h-screen bg-[#0f0f0f] text-white overflow-hidden">
-      {/* Chart Area */}
-      <div className="flex-1 overflow-y-auto pt-14">
+      {/* Chart Area — min-h-0 lets this flex child shrink so the trade bar is not crushed */}
+      <div className="min-h-0 flex-1 overflow-y-auto pt-14">
         <TradingViewWidget symbol={`${effectiveSymbol.toUpperCase()}`} />
       </div>
 
-      {/* Control Panel Fixed at Bottom */}
-      <div className="bg-[#1e1e2d] p-4 shadow-lg sticky bottom-0 z-10 pb-20">
-        <div className="flex flex-col gap-4">
+      {/* Control Panel: shrink-0 prevents flex from compressing buy/sell into thin strips */}
+      <div className="shrink-0 bg-[#1e1e2d] p-4 pt-3 shadow-lg z-10 border-t border-gray-800/80 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
+        <div className="flex flex-col gap-3">
           <div className="flex gap-2">
             <select
               className="bg-[#2c2c3a] p-2 py-3 rounded text-white w-full"
@@ -208,31 +208,33 @@ export default function TradingInterface() {
             </div>
           </div>
 
-          {/* Buy / Sell Buttons */}
-          <div className="flex gap-2">
+          {/* Buy / Sell — explicit text color + min height so labels stay visible on mobile */}
+          <div className="flex shrink-0 gap-2">
             <button
               type="button"
               onClick={() => handleTrade("sell")}
-              className="bg-red-600 hover:bg-red-700 w-full py-2 rounded text-sm font-semibold"
+              className="flex min-h-[3.25rem] w-full flex-col items-center justify-center rounded-lg bg-red-600 px-2 py-2.5 text-sm font-semibold leading-tight text-white hover:bg-red-700 active:bg-red-800 disabled:opacity-60 disabled:hover:bg-red-600"
               disabled={
                 !userData?.isTradeAllowed || amount <= 0 || isSubmitting
               }
             >
-              SELL
-              <br />
-              <span className="text-xs font-normal">BY MARKET</span>
+              <span>SELL</span>
+              <span className="text-[0.65rem] font-normal opacity-95">
+                BY MARKET
+              </span>
             </button>
             <button
               type="button"
               onClick={() => handleTrade("buy")}
-              className="bg-green-600 hover:bg-green-700 w-full py-2 rounded text-sm font-semibold"
+              className="flex min-h-[3.25rem] w-full flex-col items-center justify-center rounded-lg bg-green-600 px-2 py-2.5 text-sm font-semibold leading-tight text-white hover:bg-green-700 active:bg-green-800 disabled:opacity-60 disabled:hover:bg-green-600"
               disabled={
                 !userData?.isTradeAllowed || amount <= 0 || isSubmitting
               }
             >
-              BUY
-              <br />
-              <span className="text-xs font-normal">BY MARKET</span>
+              <span>BUY</span>
+              <span className="text-[0.65rem] font-normal opacity-95">
+                BY MARKET
+              </span>
             </button>
           </div>
         </div>
