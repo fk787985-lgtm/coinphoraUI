@@ -1,54 +1,29 @@
 import React, { useEffect } from "react";
+import { openTawkChat } from "../../../components/TawkChatWidget";
 
 const Helpline = () => {
-useEffect(() => {
-  let script;
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      openTawkChat();
+    }, 300);
 
-  const addHubspotScript = () => {
-    if (!document?.getElementById?.("hs-script-loader")) {
-      script = document?.createElement?.("script");
-      if (script) {
-        script.src = "//js-na2.hs-scripts.com/243224366.js";
-        script.async = true;
-        script.defer = true;
-        script.id = "hs-script-loader";
-
-        script.onload = () => {
-          // Safely load HubSpot widget
-          window?.HubSpotConversations?.widget?.load?.();
-        };
-
-        document?.head?.appendChild?.(script);
-      }
-    }
-  };
-
-  addHubspotScript();
-
-  return () => {
-    // Remove iframe container safely
-    const iframeContainer = document?.querySelector?.("#hubspot-messages-iframe-container");
-    iframeContainer?.remove?.();
-
-    // Remove script tag safely
-    const existingScript = document?.getElementById?.("hs-script-loader");
-    existingScript?.remove?.();
-
-    // Safely destroy HubSpot widget if the method exists
-    window?.HubSpotConversations?.widget?.destroy?.();
-  };
-}, []);
+    return () => clearTimeout(timeout);
+  }, []);
 
 
   return (
     <div className="h-screen bg-[#0d111c] text-white flex flex-col items-center justify-center px-4">
       <h1 className="text-2xl font-bold mb-2">Need Help?</h1>
       <p className="text-gray-400 mb-6 text-center">
-        Our live support team is here to assist you. Start a chat using the button in the corner.
+        Our live support team is here to assist you. Start a chat using the floating button.
       </p>
-      <div className="text-sm text-gray-500 italic">
-        Live chat loading...
-      </div>
+      <button
+        type="button"
+        onClick={openTawkChat}
+        className="px-4 py-2 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-300 transition"
+      >
+        Open Live Chat
+      </button>
     </div>
   );
 };

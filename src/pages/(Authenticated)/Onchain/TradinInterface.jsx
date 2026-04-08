@@ -167,7 +167,7 @@ export default function TradingInterface() {
       </div>
 
       {/* Control Panel Fixed at Bottom */}
-      <div className="bg-[#1e1e2d] p-4 shadow-lg sticky bottom-0 z-10 pb-28">
+      <div className="bg-[#1e1e2d] p-4 shadow-lg sticky bottom-0 z-10 pb-20">
         <div className="flex flex-col gap-4">
           <div className="flex gap-2">
             <select

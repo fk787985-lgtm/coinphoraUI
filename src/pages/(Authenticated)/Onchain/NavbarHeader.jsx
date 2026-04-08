@@ -10,6 +10,7 @@ import logo from "../../../assets/logo.png";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { openTawkChat } from "../../../components/TawkChatWidget";
 
 const baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -45,7 +46,10 @@ const NavbarHeader = ({ toggleDrawer, title }) => {
   const isTradePage = ["/trade", "/orders", "/order"].includes(currentRoute);
 
   const handleBack = () => navigate(-1);
-  const handleSupport = () => navigate("/helpline");
+  const handleSupport = () => {
+    const opened = openTawkChat();
+    if (!opened) navigate("/helpline");
+  };
 
   // Toggle language dropdown visibility
   const toggleLangDropdown = () => setShowLangDropdown(!showLangDropdown);
