@@ -3,6 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { useUpdateUpdateDeposit } from "../../../hooks/userUpdateUserState";
+import AdminPage from "../../../components/admin/AdminPage";
+import AdminTable from "../../../components/admin/AdminTable";
+import AdminStatusBadge from "../../../components/admin/AdminStatusBadge";
+import { AdminCard } from "../../../components/admin/AdminCard";
+import { EmptyState, ErrorState, LoadingState } from "../../../components/admin/AdminStates";
 
 const baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -57,110 +62,97 @@ const DepositLog = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f1a] text-white p-6">
+    <AdminPage
+      title="Deposit Logs"
+      subtitle="Review incoming deposits and approve or reject pending transactions."
+      actions={
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-slate-400">Status</label>
+          <select value={filter} onChange={handleFilterChange} className="admin-input min-w-[160px]">
+            <option value="All">All</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+      }
+    >
       <Toaster />
-      <h1 className="text-2xl font-bold text-yellow-400 mb-6">All Deposit Logs</h1>
-
-      <div className="mb-6">
-        <label className="mr-2 text-gray-300">Filter by Status:</label>
-        <select
-          value={filter}
-          onChange={handleFilterChange}
-          className="bg-[#1e2738] text-white px-4 py-2 border border-gray-600 rounded-md"
-        >
-          <option value="All">All</option>
-          <option value="Pending">Pending</option>
-          <option value="Completed">Completed</option>
-          <option value="Rejected">Rejected</option>
-        </select>
-      </div>
-
-      <div className="overflow-auto rounded-md border border-gray-700 bg-[#101827]">
-        <table className="min-w-full text-sm">
-          <thead className="bg-[#1a2332] text-yellow-300 uppercase">
+      <AdminTable>
+          <thead>
             <tr>
-              <th className="border border-gray-700 px-4 py-2">Gateway</th>
-              <th className="border border-gray-700 px-4 py-2">User</th>
-              <th className="border border-gray-700 px-4 py-2">Amount</th>
-              <th className="border border-gray-700 px-4 py-2">Conversion</th>
-              <th className="border border-gray-700 px-4 py-2">Transaction ID</th>
-              <th className="border border-gray-700 px-4 py-2">Status</th>
-              <th className="border border-gray-700 px-4 py-2">Action</th>
+              <th>Gateway</th>
+              <th>User</th>
+              <th>Amount</th>
+              <th>Conversion</th>
+              <th>Transaction ID</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="text-center py-6 text-gray-400">
-                  Loading deposit logs...
-                </td>
+                <td colSpan={7}><LoadingState text="Loading deposit logs..." /></td>
               </tr>
             ) : isError ? (
               <tr>
-                <td colSpan={7} className="text-center py-6 text-red-500">
-                  Error fetching deposit data.
-                </td>
+                <td colSpan={7}><ErrorState text="Error fetching deposit data." /></td>
               </tr>
             ) : (
               apiData?.map((deposit) => (
-                <tr key={deposit._id} className="text-center border-b border-gray-700">
-                  <td className="px-4 py-2 border border-gray-700">{deposit.gateway}</td>
-                  <td className="px-4 py-2 border border-gray-700">{deposit.username}</td>
-                  <td className="px-4 py-2 border border-gray-700">{deposit.amount}</td>
-                  <td className="px-4 py-2 border border-gray-700">
+                <tr key={deposit._id}>
+                  <td>{deposit.gateway}</td>
+                  <td>{deposit.username}</td>
+                  <td>{deposit.amount}</td>
+                  <td>
                     {(deposit.amount / deposit.coinConversion).toFixed(6)} {deposit.gateway}
                   </td>
-                  <td className="px-4 py-2 border border-gray-700">
+                  <td>
                     <div className="flex items-center justify-center gap-2">
                       <span>{deposit.transactionId}</span>
                       <button
                         onClick={() => copyTransactionId(deposit.transactionId)}
-                        className="text-blue-400 underline hover:text-blue-300 text-xs"
+                        className="text-xs text-indigo-300 underline hover:text-indigo-200"
                       >
                         Copy
                       </button>
                     </div>
                   </td>
-                  <td className="px-4 py-2 border border-gray-700">
-                    <span
-                      className={`px-2 py-1 text-sm rounded-full ${
-                        deposit.status === "Completed"
-                          ? "bg-green-500 text-white"
-                          : deposit.status === "Pending"
-                          ? "bg-yellow-400 text-black"
-                          : "bg-red-500 text-white"
-                      }`}
-                    >
-                      {deposit.status}
-                    </span>
+                  <td>
+                    <AdminStatusBadge status={deposit.status} />
                   </td>
-                  <td className="px-4 py-2 border border-gray-700">
+                  <td>
                     {deposit.status === "Pending" ? (
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={() => handleStatusUpdate(deposit._id, "Completed")}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                          className="admin-btn bg-emerald-600 text-white hover:bg-emerald-500"
                         >
                           Accept
                         </button>
                         <button
                           onClick={() => handleStatusUpdate(deposit._id, "Rejected")}
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+                          className="admin-btn admin-btn-danger"
                         >
                           Reject
                         </button>
                       </div>
                     ) : (
-                      <span className="text-gray-500">Closed</span>
+                      <span className="text-slate-500">Closed</span>
                     )}
                   </td>
                 </tr>
               ))
             )}
           </tbody>
-        </table>
-      </div>
-    </div>
+        </AdminTable>
+      {apiData?.length === 0 && !isLoading && !isError ? (
+        <AdminCard>
+          <EmptyState text="No deposit logs found." />
+        </AdminCard>
+      ) : null}
+    </AdminPage>
   );
 };
 

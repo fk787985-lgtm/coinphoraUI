@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import AdminPage from "../../../components/admin/AdminPage";
+import { AdminCard } from "../../../components/admin/AdminCard";
+import { EmptyState, ErrorState, LoadingState } from "../../../components/admin/AdminStates";
 
 const baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -32,8 +35,6 @@ const Logs = () => {
     }))
   );
 
-  console.log('Log Data:', users);
-  // Extract unique emails
   const emails = Array.from(new Set(logData.map((log) => log.createdByEmail)));
 
   const handleEmailClick = (email) => {
@@ -55,21 +56,35 @@ const Logs = () => {
     }, {});
   };
 
-  if (isLoading) return <div className="text-white p-4">Loading...</div>;
-  if (isError) return <div className="text-red-400 p-4">Error loading data.</div>;
+  if (isLoading) {
+    return (
+      <AdminPage title="User Login Logs" subtitle="Audit sign-ins, devices, and geolocation history.">
+        <AdminCard>
+          <LoadingState text="Loading logs..." />
+        </AdminCard>
+      </AdminPage>
+    );
+  }
+
+  if (isError) {
+    return (
+      <AdminPage title="User Login Logs" subtitle="Audit sign-ins, devices, and geolocation history.">
+        <AdminCard>
+          <ErrorState text="Error loading data." />
+        </AdminCard>
+      </AdminPage>
+    );
+  }
 
   return (
-    <div className="p-4 bg-gray-900 min-h-screen text-white">
-      <h1 className="text-2xl font-bold mb-6">User Login Logs</h1>
-
-      {/* Email list */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4">Emails</h2>
-        <ul className="list-disc pl-6 space-y-1">
+    <AdminPage title="User Login Logs" subtitle="Audit sign-ins, devices, and geolocation history.">
+      <div className="mb-6 rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+        <h2 className="mb-4 text-lg font-semibold text-slate-200">Emails</h2>
+        <ul className="space-y-2">
           {emails.map((email, index) => (
             <li
               key={index}
-              className="cursor-pointer text-blue-400 hover:underline"
+              className="cursor-pointer rounded-md px-3 py-2 text-indigo-300 hover:bg-slate-800"
               onClick={() => handleEmailClick(email)}
             >
               {email}
@@ -78,27 +93,26 @@ const Logs = () => {
         </ul>
       </div>
 
-      {/* Expanded email logs */}
       {expandedEmail && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Logs for {expandedEmail}</h2>
+        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+          <h2 className="mb-4 text-lg font-semibold text-slate-200">Logs for {expandedEmail}</h2>
           {Object.entries(
             groupLogsByDate(logData.filter((log) => log.createdByEmail === expandedEmail))
           ).map(([date, logs]) => (
             <div key={date} className="mb-4">
               <h3
-                className="text-lg font-semibold cursor-pointer text-blue-300 hover:underline"
+                className="cursor-pointer text-base font-semibold text-indigo-300 hover:underline"
                 onClick={() => handleDateClick(date)}
               >
                 {date}
               </h3>
 
               {expandedDate === date && (
-                <div className="bg-gray-800 border border-gray-600 rounded-md p-4 shadow-inner mt-2">
+                <div className="mt-2 rounded-md border border-slate-700 bg-slate-950/80 p-4 shadow-inner">
                   {logs.map((log, index) => (
                     <pre
                       key={index}
-                      className="bg-black text-green-300 p-4 rounded-md text-sm overflow-x-auto mb-4"
+                      className="mb-4 overflow-x-auto rounded-md border border-slate-700 bg-black/70 p-4 text-sm text-emerald-300"
                     >{`{
   "createdByEmail": "${log?.createdByEmail}",
   "deviceInfo": {
@@ -121,7 +135,12 @@ const Logs = () => {
           ))}
         </div>
       )}
-    </div>
+      {!expandedEmail && emails.length === 0 ? (
+        <AdminCard>
+          <EmptyState text="No login logs available." />
+        </AdminCard>
+      ) : null}
+    </AdminPage>
   );
 };
 

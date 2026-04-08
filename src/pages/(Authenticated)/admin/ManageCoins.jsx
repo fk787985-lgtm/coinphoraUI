@@ -7,6 +7,12 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useFormik } from "formik";
 import toast, { Toaster } from "react-hot-toast";
+import AdminPage from "../../../components/admin/AdminPage";
+import AdminTable from "../../../components/admin/AdminTable";
+import AdminStatusBadge from "../../../components/admin/AdminStatusBadge";
+import AdminModal, { ConfirmDialog } from "../../../components/admin/AdminModal";
+import { AdminCard } from "../../../components/admin/AdminCard";
+import { EmptyState, ErrorState, LoadingState } from "../../../components/admin/AdminStates";
 const baseURL = import.meta.env.VITE_BASE_URL;
 
 const ManageCoins = () => {
@@ -146,69 +152,43 @@ const ManageCoins = () => {
     setCoinToDelete(null); // Reset the coin to delete
   };
   return (
-    <div className="p-6 bg-gray-900 min-h-screen text-gray-100 transition-colors duration-500">
-      <Toaster />
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-semibold">Manage Coins</h2>
-        <button
-          onClick={openAddModal}
-          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
-        >
+    <AdminPage
+      title="Manage Coins"
+      subtitle="Control tradable assets, display logos, P/L indicators, and activation status."
+      actions={
+        <button onClick={openAddModal} className="admin-btn admin-btn-primary">
           + Add Coin
         </button>
-      </div>
-
+      }
+    >
+      <Toaster />
       {isLoading && (
-        <div className="flex justify-center items-center py-10">
-          <svg
-            className="animate-spin -ml-1 mr-3 h-8 w-8 text-blue-400"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-            ></path>
-          </svg>
-          <span className="text-blue-400 font-medium">Loading coins...</span>
-        </div>
+        <AdminCard><LoadingState text="Loading coins..." /></AdminCard>
       )}
       {isError && (
-        <p className="text-red-500 font-semibold py-10 text-center">
-          Error loading coins.
-        </p>
+        <AdminCard><ErrorState text="Error loading coins." /></AdminCard>
       )}
 
       {!isLoading && !isError && apiData && (
-        <table className="min-w-full bg-gray-800 border border-gray-700 rounded-lg shadow-md overflow-hidden transition-colors duration-500">
+        <AdminTable>
           <thead>
-            <tr className="bg-gray-700 text-left">
-              <th className="p-3 border border-gray-600">#</th>
-              <th className="p-3 border border-gray-600">Logo & Name</th>
-              <th className="p-3 border border-gray-600">Symbol</th>
-              <th className="p-3 border border-gray-600">P/L %</th>
-              <th className="p-3 border border-gray-600">Status</th>
-              <th className="p-3 border border-gray-600">Actions</th>
+            <tr>
+              <th>#</th>
+              <th>Logo & Name</th>
+              <th>Symbol</th>
+              <th>P/L %</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {apiData.map((coin, idx) => (
               <tr
                 key={coin._id || idx}
-                className="hover:bg-gray-700 transition"
+                className="transition"
               >
-                <td className="p-3 border border-gray-600">{idx + 1}</td>
-                <td className="p-3 border border-gray-600 flex items-center gap-3">
+                <td>{idx + 1}</td>
+                <td className="flex items-center gap-3">
                   <img
                     src={coin.logo}
                     alt="logo"
@@ -216,29 +196,21 @@ const ManageCoins = () => {
                   />
                   <span className="font-semibold">{coin.coinName}</span>
                 </td>
-                <td className="p-3 border border-gray-600">{coin.symbol}</td>
-                <td className="p-3 border border-gray-600">{coin.pnl}</td>
-                <td className="p-3 border border-gray-600">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      coin.status === "active"
-                        ? "bg-green-800 text-green-400"
-                        : "bg-red-800 text-red-400"
-                    }`}
-                  >
-                    {coin.status}
-                  </span>
+                <td>{coin.symbol}</td>
+                <td>{coin.pnl}</td>
+                <td>
+                  <AdminStatusBadge status={coin.status} />
                 </td>
-                <td className="p-3 border border-gray-600">
+                <td>
                   <button
                     onClick={() => openEditModal(coin)}
-                    className="bg-yellow-500 text-white px-3 py-1 rounded mr-2 hover:bg-yellow-600 transition"
+                    className="admin-btn admin-btn-secondary mr-2"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(coin)}
-                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
+                    className="admin-btn admin-btn-danger"
                   >
                     Delete
                   </button>
@@ -246,71 +218,65 @@ const ManageCoins = () => {
               </tr>
             ))}
           </tbody>
-        </table>
+        </AdminTable>
       )}
+      {!isLoading && !isError && apiData?.length === 0 ? (
+        <AdminCard>
+          <EmptyState text="No coins configured yet." />
+        </AdminCard>
+      ) : null}
 
-      {/* Modal */}
       {isDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50 transition-colors duration-500">
-          <div className="bg-gray-800 rounded-lg shadow-xl w-[400px] p-6 transition-colors duration-500">
-            <h3 className="text-xl font-semibold mb-4 text-gray-100">
-              {editingCoin ? "Edit Coin" : "Add Coin"}
-            </h3>
+        <AdminModal
+          title={editingCoin ? "Edit Coin" : "Add Coin"}
+          onClose={() => setIsDialogOpen(false)}
+          className="max-w-md"
+        >
             <form onSubmit={formik.handleSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300">
-                  Coin Name
-                </label>
+                <label className="admin-label">Coin Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Bitcoin"
                   {...formik.getFieldProps("coinName")}
-                  className="w-full p-2 mt-1 border rounded bg-gray-700 text-gray-100 border-gray-600 focus:ring focus:ring-blue-400"
+                  className="admin-input"
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300">
-                  Symbol
-                </label>
+                <label className="admin-label">Symbol</label>
                 <input
                   type="text"
                   placeholder="e.g. BTC"
                   {...formik.getFieldProps("symbol")}
-                  className="w-full p-2 mt-1 border rounded bg-gray-700 text-gray-100 border-gray-600 focus:ring focus:ring-blue-400"
+                  className="admin-input"
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300">
-                  P/L %
-                </label>
+                <label className="admin-label">P/L %</label>
                 <input
                   type="text"
                   placeholder="e.g. 5%"
                   {...formik.getFieldProps("pnl")}
-                  className="w-full p-2 mt-1 border rounded bg-gray-700 text-gray-100 border-gray-600 focus:ring focus:ring-blue-400"
+                  className="admin-input"
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300">
-                  Status
-                </label>
+                <label className="admin-label">Status</label>
                 <select
                   {...formik.getFieldProps("status")}
-                  className="w-full p-2 mt-1 border rounded bg-gray-700 text-gray-100 border-gray-600 focus:ring focus:ring-blue-400"
+                  className="admin-input"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300">
-                  Upload Logo
-                </label>
+                <label className="admin-label">Upload Logo</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  className="w-full p-2 mt-1 border rounded bg-gray-700 text-gray-100 border-gray-600"
+                  className="admin-input"
                 />
                 {imgUrl && (
                   <img
@@ -327,50 +293,31 @@ const ManageCoins = () => {
                 <button
                   type="button"
                   onClick={() => setIsDialogOpen(false)}
-                  className="bg-gray-700 text-gray-300 px-4 py-2 rounded hover:bg-gray-600 transition"
+                  className="admin-btn admin-btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                  className="admin-btn admin-btn-primary"
                 >
                   {editingCoin ? "Update" : "Create"}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </AdminModal>
       )}
 
-      {/* Delete confirmation dialog */}
       {isDeleteDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50 transition-colors duration-500">
-          <div className="bg-gray-800 rounded-lg shadow-xl w-[300px] p-6 transition-colors duration-500">
-            <h3 className="text-lg font-semibold mb-4 text-gray-100">
-              Are you sure?
-            </h3>
-            <p className="text-sm mb-4 text-gray-300">
-              You are about to delete this coin. This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={cancelDelete}
-                className="bg-gray-700 text-gray-300 px-4 py-2 rounded hover:bg-gray-600 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="Delete Coin"
+          description="You are about to delete this coin. This action cannot be undone."
+          onCancel={cancelDelete}
+          onConfirm={confirmDelete}
+          confirmText="Confirm"
+        />
       )}
-    </div>
+    </AdminPage>
   );
 };
 

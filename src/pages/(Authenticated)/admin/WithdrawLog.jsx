@@ -3,6 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { useUpdateUpdateWithdraw } from "../../../hooks/userUpdateUserState";
+import AdminPage from "../../../components/admin/AdminPage";
+import AdminTable from "../../../components/admin/AdminTable";
+import AdminStatusBadge from "../../../components/admin/AdminStatusBadge";
+import { AdminCard } from "../../../components/admin/AdminCard";
+import { EmptyState, ErrorState, LoadingState } from "../../../components/admin/AdminStates";
 
 const baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -61,129 +66,93 @@ const WithdrawLog = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 bg-gray-900 min-h-screen text-gray-100">
+    <AdminPage
+      title="Withdraw Logs"
+      subtitle="Review outgoing withdrawals and process pending payout requests."
+      actions={
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-slate-400">Status</label>
+          <select value={filter} onChange={handleFilterChange} className="admin-input min-w-[160px]">
+            <option value="All">All</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+      }
+    >
       <Toaster />
-      <h1 className="text-2xl font-semibold mb-4">Withdraw Logs</h1>
-
-      {/* Filter */}
-      <div className="mb-4">
-        <label className="mr-2">Filter by Status:</label>
-        <select
-          value={filter}
-          onChange={handleFilterChange}
-          className="px-4 py-2 border rounded-md bg-gray-800 text-gray-100 border-gray-700"
-        >
-          <option value="All" className="bg-gray-800 text-gray-100">All</option>
-          <option value="Pending" className="bg-gray-800 text-gray-100">Pending</option>
-          <option value="Completed" className="bg-gray-800 text-gray-100">Completed</option>
-          <option value="Rejected" className="bg-gray-800 text-gray-100">Rejected</option>
-        </select>
-      </div>
-
-      {/* Withdraw Table or Loading/Error */}
       {isLoading ? (
-        <div className="flex justify-center items-center py-10">
-          <svg
-            className="animate-spin h-8 w-8 text-blue-400 mr-3"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-            ></path>
-          </svg>
-          <span className="text-blue-400 font-medium">Loading withdraw logs...</span>
-        </div>
+        <AdminCard><LoadingState text="Loading withdraw logs..." /></AdminCard>
       ) : isError ? (
-        <div className="text-red-500 font-semibold py-10 text-center">
-          Error fetching withdraw logs.
-        </div>
+        <AdminCard><ErrorState text="Error fetching withdraw logs." /></AdminCard>
       ) : (
-        <table className="min-w-full border-collapse border border-gray-700">
+        <AdminTable>
           <thead>
-            <tr className="bg-gray-800 text-gray-200">
-              <th className="border px-4 py-2 border-gray-700">Gateway</th>
-              <th className="border px-4 py-2 border-gray-700">User</th>
-              <th className="border px-4 py-2 border-gray-700">Amount</th>
-              <th className="border px-4 py-2 border-gray-700">Conversion</th>
-              <th className="border px-4 py-2 border-gray-700">Payment Address</th>
-              <th className="border px-4 py-2 border-gray-700">Status</th>
-              <th className="border px-4 py-2 border-gray-700">Action</th>
+            <tr>
+              <th>Gateway</th>
+              <th>User</th>
+              <th>Amount</th>
+              <th>Conversion</th>
+              <th>Payment Address</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {withdraws?.map((withdraw) => (
-              <tr
-                key={withdraw._id}
-                className="even:bg-gray-800 odd:bg-gray-700 text-gray-100"
-              >
-                <td className="border px-4 py-2 border-gray-700">{withdraw.gateway}</td>
-                <td className="border px-4 py-2 border-gray-700">{withdraw.username}</td>
-                <td className="border px-4 py-2 border-gray-700">{withdraw.amount}</td>
-                <td className="border px-4 py-2 border-gray-700">
+              <tr key={withdraw._id}>
+                <td>{withdraw.gateway}</td>
+                <td>{withdraw.username}</td>
+                <td>{withdraw.amount}</td>
+                <td>
                   {(withdraw.amount / withdraw.coinConversion).toFixed(6)} {withdraw.gateway}
                 </td>
-                <td className="border px-4 py-2 border-gray-700">
+                <td>
                   {withdraw.paymentAddress}
                   <button
                     onClick={() => copyAddress(withdraw.paymentAddress)}
-                    className="ml-2 text-blue-400 text-xs underline"
+                    className="ml-2 text-xs text-indigo-300 underline"
                   >
                     Copy
                   </button>
                 </td>
-                <td className="border px-4 py-2 border-gray-700">
-                  <span
-                    className={`p-1 rounded-full text-white ${
-                      withdraw.status === "Completed"
-                        ? "bg-green-600"
-                        : withdraw.status === "Pending"
-                        ? "bg-yellow-500"
-                        : "bg-red-600"
-                    }`}
-                  >
-                    {withdraw.status}
-                  </span>
+                <td>
+                  <AdminStatusBadge status={withdraw.status} />
                 </td>
-                <td className="border px-4 py-2 border-gray-700">
+                <td>
                   {withdraw.status === "Pending" ? (
                     <>
                       <button
                         onClick={() => handleStatusUpdate(withdraw._id, "Completed")}
-                        className="bg-green-600 text-white px-3 py-1 rounded-md mr-2 disabled:opacity-50"
+                        className="admin-btn mr-2 bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
                         disabled={isMutating}
                       >
                         Accept
                       </button>
                       <button
                         onClick={() => handleStatusUpdate(withdraw._id, "Rejected")}
-                        className="bg-red-600 text-white px-3 py-1 rounded-md disabled:opacity-50"
+                        className="admin-btn admin-btn-danger disabled:opacity-50"
                         disabled={isMutating}
                       >
                         Reject
                       </button>
                     </>
                   ) : (
-                    <span className="text-gray-400">Closed</span>
+                    <span className="text-slate-500">Closed</span>
                   )}
                 </td>
               </tr>
             ))}
           </tbody>
-        </table>
+        </AdminTable>
       )}
-    </div>
+      {!isLoading && !isError && withdraws?.length === 0 ? (
+        <AdminCard>
+          <EmptyState text="No withdraw logs found." />
+        </AdminCard>
+      ) : null}
+    </AdminPage>
   );
 };
 

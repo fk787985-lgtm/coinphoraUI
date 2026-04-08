@@ -2,6 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .admin-page {
+    @apply min-h-screen bg-slate-950 px-4 py-5 text-slate-100 md:px-6;
+  }
+  .admin-page-header {
+    @apply mb-5 flex flex-col justify-between gap-4 border-b border-slate-800 pb-4 md:flex-row md:items-center;
+  }
+  .admin-page-title {
+    @apply text-2xl font-semibold tracking-tight text-slate-100;
+  }
+  .admin-page-subtitle {
+    @apply mt-1 text-sm text-slate-400;
+  }
+  .admin-page-actions {
+    @apply flex flex-wrap items-center gap-2;
+  }
+  .admin-card {
+    @apply rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm;
+  }
+  .admin-table-wrap {
+    @apply overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/40;
+  }
+  .admin-table {
+    @apply min-w-full divide-y divide-slate-800 text-sm;
+  }
+  .admin-table thead tr {
+    @apply bg-slate-900/90;
+  }
+  .admin-table thead th {
+    @apply whitespace-nowrap px-3 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-300;
+  }
+  .admin-table tbody td {
+    @apply px-3 py-3 align-top text-slate-200;
+  }
+  .admin-table tbody tr {
+    @apply border-b border-slate-800/80 hover:bg-slate-900/80;
+  }
+  .admin-btn {
+    @apply rounded-md px-3 py-2 text-sm font-medium transition;
+  }
+  .admin-btn-primary {
+    @apply bg-indigo-600 text-white hover:bg-indigo-500;
+  }
+  .admin-btn-secondary {
+    @apply border border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800;
+  }
+  .admin-btn-danger {
+    @apply bg-rose-600 text-white hover:bg-rose-500;
+  }
+  .admin-input {
+    @apply w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-indigo-400/40 placeholder:text-slate-500 focus:ring-2;
+  }
+  .admin-label {
+    @apply mb-1 block text-xs font-medium uppercase tracking-wide text-slate-400;
+  }
+  .admin-modal {
+    @apply max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl border border-slate-800 bg-slate-900 p-5 text-slate-100 shadow-2xl;
+  }
+}
+
 /* body {
   @apply font-sans;
   

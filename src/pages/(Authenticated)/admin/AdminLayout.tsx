@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import SuperSidebar from "./AdminSidebar";
 import { Route, Routes } from "react-router-dom";
 import Logs from "./Logs";
@@ -14,6 +14,8 @@ import WithdrawLog from "./WithdrawLog";
 import SiteSetting from "./SiteSetting";
 import TradeResults from "./TradeResult";
 import Transaction from "./Transaction";
+import { Menu } from "lucide-react";
+import { useLocation } from "react-router-dom";
 // import Dashboard from "./Dashboard";
 // import Users from "./Users";
 // import Settings from "./Settings";
@@ -33,11 +35,47 @@ import Transaction from "./Transaction";
 // import Profile from "./Profile";
 
 const AdminLayout = () => {
-  return (
-    <div className="flex h-screen   bg-white transition-all ">
-      <SuperSidebar />
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+  const pageTitle = useMemo(() => {
+    const map = {
+      dashboard: "Dashboard",
+      users: "Users",
+      pendingKyc: "Pending KYC",
+      coins: "Manage Coins",
+      depositMethod: "Deposit Methods",
+      withdrawMethod: "Withdraw Methods",
+      settings: "Site Settings",
+      tradeResult: "Trade Result",
+      transaction: "Transaction",
+      logs: "Logs",
+    };
+    const key = location.pathname.split("/")[2] || "dashboard";
+    return map[key] || "Admin";
+  }, [location.pathname]);
 
-      <div className="flex-1 h-screen overflow-auto  bg-gray-50/70">
+  return (
+    <div className="flex h-screen bg-slate-950 text-slate-100">
+      <SuperSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex items-center justify-between border-b border-slate-800 bg-slate-950/90 px-4 py-3 backdrop-blur-sm md:px-6">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="rounded-md border border-slate-700 p-2 text-slate-300 lg:hidden"
+              aria-label="Open sidebar"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Admin Workspace</p>
+              <h1 className="text-lg font-semibold text-slate-100">{pageTitle}</h1>
+            </div>
+          </div>
+          <p className="hidden text-sm text-slate-400 md:block">Operational dashboard</p>
+        </header>
+        <main className="flex-1 overflow-auto bg-slate-950/80">
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<Users />} />
@@ -52,8 +90,7 @@ const AdminLayout = () => {
 
           
           <Route path="transaction" element={<Transaction />} />
-
-          
+          <Route path="logs" element={<Logs />} />
           {/* <Route path="settings/website" element={<DashBoardSettings />} />
           <Route path="settings/company" element={<CompanySettings />} />
           <Route path="settings/price" element={<PriceSettings />} />
@@ -69,12 +106,8 @@ const AdminLayout = () => {
           <Route path="admins/all" element={<AllAdmins />} />
           <Route path="admins/active" element={<ActiveAdmins />} />
           <Route path="admins/deactive" element={<DeactiveAdmins />} /> */}
-
-
-
-          <Route path="logs" element={<Logs />} />
-
         </Routes>
+        </main>
       </div>
     </div>
   );

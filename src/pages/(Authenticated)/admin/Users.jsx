@@ -3,10 +3,16 @@ import { useFormik } from "formik";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { Search, X } from "lucide-react"; // Import the X icon
+import { Search } from "lucide-react";
 import { useUpdateUserState } from "../../../hooks/userUpdateUserState";
 import { useUpdatePassword } from "../../../hooks/userUpdateUserState";
 import { verifyAdminPassword } from "../../../helper/helper.jsx";
+import AdminPage from "../../../components/admin/AdminPage";
+import AdminTable from "../../../components/admin/AdminTable";
+import AdminStatusBadge from "../../../components/admin/AdminStatusBadge";
+import AdminModal from "../../../components/admin/AdminModal";
+import { AdminCard, StatCard } from "../../../components/admin/AdminCard";
+import { EmptyState, ErrorState, LoadingState } from "../../../components/admin/AdminStates";
 
 const baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -44,28 +50,25 @@ const Users = () => {
       return data;
     },
   });
-  // console.log(users)
+
   const formik = useFormik({
     initialValues: {
       id: editingUser?._id || "",
       email: editingUser?.email || "",
       fullName: editingUser?.fullName || "",
       appNotice: editingUser?.appNotice || "",
-
       username: editingUser?.username || "",
       balance: editingUser?.balance || "",
       totalDeposit: editingUser?.totalDeposit || "",
       totalWithdraw: editingUser?.totalWithdraw || "",
-
       isWithdrawalAllowed: editingUser?.isWithdrawalAllowed || false,
       isTradeAllowed: editingUser?.isTradeAllowed || false,
       isActive: editingUser?.isActive || false,
-      // balanceAdjustment: "", // For adding/subtracting balance
+      balanceAdjustment: "",
     },
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
-        // console.log(values);
         await updateMutation.mutateAsync(values);
         toast.success("User updated successfully!");
         setIsDialogOpen(false);
@@ -112,13 +115,12 @@ const Users = () => {
     }
   };
 
-  // Function to close the modal
   const closeModal = () => {
     setIsDialogOpen(false);
     setEditingUser(null);
+    setIsPasswordChanging(false);
   };
 
-  // Function to handle adding or subtracting the balance
   const handleBalanceChange = (operation) => {
     const adjustmentValue = parseFloat(formik.values.balanceAdjustment);
     if (isNaN(adjustmentValue) || adjustmentValue <= 0) {
@@ -132,17 +134,13 @@ const Users = () => {
         : parseFloat(formik.values.balance) - adjustmentValue;
 
     formik.setFieldValue("balance", updatedBalance.toFixed(2));
-    formik.setFieldValue("balanceAdjustment", ""); // Clear the adjustment field after update
-
-    // Now submit the form
-    formik.handleSubmit(); // Trigger form submission after balance change
-
-    // Show a success toast after form submission
+    formik.setFieldValue("balanceAdjustment", "");
+    formik.handleSubmit();
     toast.success("Balance updated successfully!");
   };
+
   const handleUserLogin = (id) => {
-    let loginPromise = verifyAdminPassword(id); // Call your login verification function with the user ID
-    console.log("user id",id)
+    const loginPromise = verifyAdminPassword(id);
     toast.promise(loginPromise, {
       loading: "Checking...",
       success: <b>Login Successfully...!</b>,
@@ -151,97 +149,93 @@ const Users = () => {
 
     loginPromise
       .then((res) => {
-        if (res && res?.data) {
-          const { token, role, email } = res.data;
-          console.log("login res",res.data)
-          // Store token and email in localStorage
+        if (res?.data) {
+          const { token, email } = res.data;
           localStorage.setItem("uToken", token);
           localStorage.setItem("currentEmail", email);
-
-          // If role is 'user', navigate to '/' and open it in a new tab
-         
-            window.open("/", "_blank"); // Opens in a new tab
-         
+          window.open("/", "_blank");
         }
       })
       .catch((res) => {
         toast.error(<b>{res?.error}</b>);
       });
   };
+
+  const totalUsers = users?.length || 0;
+  const activeUsers = users?.filter((u) => u.isActive).length || 0;
+  const inactiveUsers = totalUsers - activeUsers;
+  const totalBalance =
+    users?.reduce((sum, current) => sum + parseFloat(current.balance || 0), 0).toFixed(2) || "0.00";
+
   return (
-    <div className="p-6 min-h-screen bg-gray-900 text-gray-100">
-      {/* Header Section */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold">All Users</h2>
-          <p className="text-gray-400 text-sm">Manage all users from here</p>
-        </div>
-        <div className="flex items-center border rounded px-3 py-1 bg-gray-800 shadow-sm">
-          <Search className="w-4 h-4 text-gray-400 mr-2" />
+    <AdminPage
+      title="User Management"
+      subtitle="Search, review, and maintain user-level controls from a single operational table."
+      actions={
+        <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2">
+          <Search className="h-4 w-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search by email, username or PayID"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="outline-none w-64 text-sm bg-gray-900 text-gray-100 placeholder-gray-500"
+            className="w-64 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"
           />
         </div>
+      }
+    >
+      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-4">
+        <StatCard label="Total users" value={totalUsers} />
+        <StatCard label="Active users" value={activeUsers} />
+        <StatCard label="Inactive users" value={inactiveUsers} />
+        <StatCard label="Total balances" value={`$${totalBalance}`} />
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded shadow border border-gray-700">
-        <table className="min-w-full divide-y divide-gray-700 text-sm">
-          <thead className="bg-gray-800 text-gray-300 text-left">
+      {isLoading ? (
+        <AdminCard>
+          <LoadingState text="Loading users..." />
+        </AdminCard>
+      ) : isError ? (
+        <AdminCard>
+          <ErrorState text="Failed to load users." />
+        </AdminCard>
+      ) : (
+        <AdminTable>
+          <thead>
             <tr>
-              <th className="p-3">Pay ID / Username</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Balance</th>
-              <th className="p-3">Date Joined</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Action</th>
-              <th className="p-3">Visit User</th>
+              <th>Pay ID / Username</th>
+              <th>Email</th>
+              <th>Balance</th>
+              <th>Date Joined</th>
+              <th>Status</th>
+              <th>Action</th>
+              <th>Visit User</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700 bg-gray-900">
+          <tbody>
             {filteredUsers?.map((user) => (
-              <tr key={user._id} className="hover:bg-gray-800">
-                <td className="p-3 font-medium">
-                  <span className="text-gray-500 text-xs block">
-                    #{user.payId}
-                  </span>
+              <tr key={user._id}>
+                <td className="font-medium">
+                  <span className="block text-xs text-slate-500">#{user.payId}</span>
                   {user.username}
                 </td>
-                <td className="p-3">{user.email}</td>
-                <td className="p-3 text-green-400 font-semibold">
+                <td>{user.email}</td>
+                <td className="font-semibold text-emerald-300">
                   ${parseFloat(user.balance || 0).toFixed(2)}
                 </td>
-                <td className="p-3">
-                  {formatDate(user.dateJoined || user.createdAt)}
+                <td>{formatDate(user.dateJoined || user.createdAt)}</td>
+                <td>
+                  <AdminStatusBadge status={user.isActive ? "Active" : "Inactive"} />
                 </td>
-                <td className="p-3">
-                  <span
-                    className={`px-3 py-1 rounded-full text-white text-xs font-semibold ${
-                      user.isActive ? "bg-green-600" : "bg-red-600"
-                    }`}
-                  >
-                    {user.isActive ? "Active" : "Inactive"}
-                  </span>
-                </td>
-                <td className="p-3">
-                  <button
-                    onClick={() => handleEdit(user)}
-                    className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-1 rounded shadow-sm transition"
-                  >
+                <td>
+                  <button onClick={() => handleEdit(user)} className="admin-btn admin-btn-secondary">
                     Edit
                   </button>
                 </td>
-                <td
-                  className="p-3 cursor-pointer"
-                  // Replace userId with the actual ID you want to pass
-                >
+                <td>
                   <button
                     onClick={() => handleUserLogin(user?._id)}
-                    className="text-blue-400 hover:underline"
+                    className="text-sm text-indigo-300 hover:underline"
                   >
                     Login as User
                   </button>
@@ -249,44 +243,35 @@ const Users = () => {
               </tr>
             ))}
           </tbody>
-        </table>
-        {filteredUsers?.length === 0 && (
-          <div className="p-4 text-center text-gray-500">No users found.</div>
-        )}
-      </div>
+        </AdminTable>
+      )}
 
-      {/* Full-Screen Edit Dialog */}
-      {isDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-gray-900 p-6 w-full h-full max-h-screen overflow-y-auto rounded-md grid grid-cols-3 gap-6 relative text-gray-100">
-            {/* Close Button */}
-            <button
-              onClick={closeModal}
-              className="absolute top-6 right-6 text-gray-400 hover:text-gray-200 focus:outline-none"
-            >
-              <X className="w-6 h-6" />
-            </button>
+      {!isLoading && !isError && filteredUsers?.length === 0 ? (
+        <AdminCard>
+          <EmptyState text="No users found for this search." />
+        </AdminCard>
+      ) : null}
 
-            {/* Left Column: Balance Section */}
-            <div className="flex flex-col p-4 bg-gray-800 rounded shadow">
-              <h3 className="text-xl font-semibold mb-4">
+      {isDialogOpen ? (
+        <AdminModal title={`Edit ${editingUser?.username || "User"}`} onClose={closeModal}>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+            <AdminCard>
+              <h3 className="mb-4 text-lg font-semibold text-slate-100">
                 Balance: ${formik.values.balance}
               </h3>
-
-              <div className="flex items-center mb-4">
-                <label className="mr-2">Add/Subtract Balance</label>
-              </div>
-
-              <div className="flex gap-4 mb-4">
+              <label className="admin-label mb-2">Add/Subtract Balance</label>
+              <div className="mb-4 flex gap-3">
                 <button
+                  type="button"
                   onClick={() => handleBalanceChange("add")}
-                  className="bg-green-600 text-white px-4 py-2 rounded"
+                  className="admin-btn bg-emerald-600 text-white hover:bg-emerald-500"
                 >
                   Add +
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleBalanceChange("subtract")}
-                  className="bg-red-600 text-white px-4 py-2 rounded"
+                  className="admin-btn admin-btn-danger"
                 >
                   Subtract -
                 </button>
@@ -297,74 +282,69 @@ const Users = () => {
                 onChange={formik.handleChange}
                 value={formik.values.balanceAdjustment}
                 placeholder="Enter amount"
-                className="w-full border border-gray-700 bg-gray-800 p-2 rounded mb-4 text-gray-100"
+                className="admin-input"
               />
-            </div>
+            </AdminCard>
 
-            {/* Middle Column: User Info Section */}
-            <div className="flex flex-col p-4 bg-gray-900 rounded shadow">
-              <h3 className="text-xl font-semibold mb-4">User Information</h3>
-
-              {/* Total Deposit and Withdrawal */}
-              <div className="grid grid-cols-2 gap-6 mb-6">
-                <div className="text-center p-4 bg-gray-800 rounded">
-                  <h4 className="text-xl font-bold">Total Deposit</h4>
+            <AdminCard>
+              <h3 className="mb-4 text-lg font-semibold text-slate-100">User Information</h3>
+              <div className="mb-6 grid grid-cols-2 gap-4">
+                <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-4 text-center">
+                  <h4 className="text-sm font-semibold text-slate-300">Total Deposit</h4>
                   <p className="text-lg">${formik.values.totalDeposit}</p>
                 </div>
-                <div className="text-center p-4 bg-gray-800 rounded">
-                  <h4 className="text-xl font-bold">Total Withdraw</h4>
+                <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-4 text-center">
+                  <h4 className="text-sm font-semibold text-slate-300">Total Withdraw</h4>
                   <p className="text-lg">${formik.values.totalWithdraw}</p>
                 </div>
               </div>
 
-              {/* User Information Form */}
               <div className="mb-4">
-                <label className="block text-sm">Full Name</label>
+                <label className="admin-label">Full Name</label>
                 <input
                   name="fullName"
                   onChange={formik.handleChange}
                   value={formik.values.fullName}
-                  className="w-full border border-gray-700 bg-gray-800 p-2 rounded text-gray-100"
+                  className="admin-input"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm">Email</label>
+                <label className="admin-label">Email</label>
                 <input
                   name="email"
                   type="email"
                   onChange={formik.handleChange}
                   value={formik.values.email}
-                  className="w-full border border-gray-700 bg-gray-800 p-2 rounded text-gray-100"
+                  className="admin-input"
                 />
               </div>
+
               <div className="mb-4">
-                <label className="block text-sm">App Notice</label>
+                <label className="admin-label">App Notice</label>
                 <input
                   name="appNotice"
                   onChange={formik.handleChange}
                   value={formik.values.appNotice}
-                  className="w-full border border-gray-700 bg-gray-800 p-2 rounded text-gray-100"
+                  className="admin-input"
                 />
               </div>
+
               <div className="mb-4">
-                <label className="block text-sm">Account Status</label>
+                <label className="admin-label">Account Status</label>
                 <select
                   name="isActive"
-                  onChange={(e) => {
-                    formik.setFieldValue("isActive", e.target.value === "true");
-                  }}
-                  value={formik.values.isActive}
-                  className="w-full border border-gray-700 bg-gray-800 p-2 rounded text-gray-100"
+                  onChange={(e) => formik.setFieldValue("isActive", e.target.value === "true")}
+                  value={formik.values.isActive ? "true" : "false"}
+                  className="admin-input"
                 >
-                  <option value={true}>Active</option>
-                  <option value={false}>Inactive</option>
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
                 </select>
               </div>
 
-              {/* Permissions */}
-              <div className="flex gap-4 mb-4">
-                <label className="flex items-center">
+              <div className="mb-4 flex gap-4">
+                <label className="flex items-center text-sm text-slate-300">
                   <input
                     type="checkbox"
                     name="isWithdrawalAllowed"
@@ -374,7 +354,7 @@ const Users = () => {
                   />
                   Allow Withdrawal
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center text-sm text-slate-300">
                   <input
                     type="checkbox"
                     name="isTradeAllowed"
@@ -386,62 +366,51 @@ const Users = () => {
                 </label>
               </div>
 
-              {/* Submit User Info Button */}
-              <button
-                type="submit"
-                onClick={formik.handleSubmit}
-                className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded"
-              >
+              <button type="button" onClick={formik.handleSubmit} className="admin-btn admin-btn-primary">
                 Update Information
               </button>
-            </div>
+            </AdminCard>
 
-            {/* Right Column: Password Section */}
-            <div className="flex flex-col p-4 bg-gray-800 rounded shadow">
-              <h3 className="text-xl font-semibold mb-4">Change Password</h3>
-
+            <AdminCard>
+              <h3 className="mb-4 text-lg font-semibold text-slate-100">Change Password</h3>
               <button
+                type="button"
                 onClick={() => setIsPasswordChanging(!isPasswordChanging)}
-                className="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded mb-4"
+                className="admin-btn admin-btn-secondary mb-4"
               >
                 {isPasswordChanging ? "Cancel" : "Change Password"}
               </button>
 
-              {isPasswordChanging && (
+              {isPasswordChanging ? (
                 <>
                   <div className="mb-4">
-                    <label className="block text-sm">New Password</label>
+                    <label className="admin-label">New Password</label>
                     <input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full border border-gray-700 bg-gray-800 p-2 rounded text-gray-100"
+                      className="admin-input"
                     />
                   </div>
-
                   <div className="mb-4">
-                    <label className="block text-sm">Confirm Password</label>
+                    <label className="admin-label">Confirm Password</label>
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full border border-gray-700 bg-gray-800 p-2 rounded text-gray-100"
+                      className="admin-input"
                     />
                   </div>
-
-                  <button
-                    onClick={handlePasswordChange}
-                    className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded"
-                  >
+                  <button type="button" onClick={handlePasswordChange} className="admin-btn admin-btn-primary">
                     Save New Password
                   </button>
                 </>
-              )}
-            </div>
+              ) : null}
+            </AdminCard>
           </div>
-        </div>
-      )}
-    </div>
+        </AdminModal>
+      ) : null}
+    </AdminPage>
   );
 };
 

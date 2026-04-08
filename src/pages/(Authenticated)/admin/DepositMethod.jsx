@@ -6,6 +6,12 @@ import toast, { Toaster } from "react-hot-toast";
 import { useCreateDepositMethodState } from "../../../hooks/useCreateDepositMethodState";
 import { useUpdateDepositMethodState } from "../../../hooks/useUpdateDepositMethodState";
 import { useDeleteDepositMethodState } from "../../../hooks/useDeleteDepositMethodState";
+import AdminPage from "../../../components/admin/AdminPage";
+import AdminTable from "../../../components/admin/AdminTable";
+import AdminStatusBadge from "../../../components/admin/AdminStatusBadge";
+import AdminModal, { ConfirmDialog } from "../../../components/admin/AdminModal";
+import { AdminCard } from "../../../components/admin/AdminCard";
+import { EmptyState, ErrorState, LoadingState } from "../../../components/admin/AdminStates";
 
 const baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -106,71 +112,68 @@ const DepositMethod = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-900 text-gray-200 min-h-screen">
-      <Toaster />
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-semibold">Deposit Methods</h2>
-        <button
-          onClick={openAddModal}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-        >
+    <AdminPage
+      title="Deposit Methods"
+      subtitle="Configure available deposit channels, limits, and activation status."
+      actions={
+        <button onClick={openAddModal} className="admin-btn admin-btn-primary">
           + Add Deposit Method
         </button>
-      </div>
+      }
+    >
+      <Toaster />
+      {isLoading ? (
+        <AdminCard>
+          <LoadingState text="Loading deposit methods..." />
+        </AdminCard>
+      ) : null}
+      {isError ? (
+        <AdminCard>
+          <ErrorState text="Error loading deposit methods." />
+        </AdminCard>
+      ) : null}
 
-      {isLoading && <p>Loading methods...</p>}
-      {isError && <p>Error loading methods.</p>}
-
-      {!isLoading && apiData?.length > 0 && (
-        <table className="min-w-full bg-gray-800 border border-gray-700 rounded shadow text-gray-300">
-          <thead className="bg-gray-700 text-left text-gray-300">
+      {!isLoading && apiData?.length > 0 ? (
+        <AdminTable>
+          <thead>
             <tr>
-              <th className="p-3 border border-gray-600">#</th>
-              <th className="p-3 border border-gray-600">Name</th>
-              <th className="p-3 border border-gray-600">Currency</th>
-              <th className="p-3 border border-gray-600">Symbol</th>
-              <th className="p-3 border border-gray-600">Min - Max</th>
-              <th className="p-3 border border-gray-600">Status</th>
-              <th className="p-3 border border-gray-600">Actions</th>
+              <th>#</th>
+              <th>Name</th>
+              <th>Currency</th>
+              <th>Symbol</th>
+              <th>Min - Max</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {apiData.map((method, index) => (
               <tr
                 key={method._id}
-                className="hover:bg-gray-700 transition-colors"
+                className="transition-colors"
               >
-                <td className="p-3 border border-gray-600">{index + 1}</td>
-                <td className="p-3 border border-gray-600">{method.coinName}</td>
-                <td className="p-3 border border-gray-600">{method.currencyUsdt}</td>
-                <td className="p-3 border border-gray-600">{method.symbol}</td>
-                <td className="p-3 border border-gray-600">
+                <td>{index + 1}</td>
+                <td>{method.coinName}</td>
+                <td>{method.currencyUsdt}</td>
+                <td>{method.symbol}</td>
+                <td>
                   {method.minAmount} - {method.maxAmount}
                 </td>
-                <td className="p-3 border border-gray-600">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium 
-                    ${
-                      method.status === "active"
-                        ? "bg-green-800 text-green-400"
-                        : "bg-red-800 text-red-400"
-                    }
-                  `}
-                  >
-                    {method.status.charAt(0).toUpperCase() +
-                      method.status.slice(1)}
-                  </span>
+                <td>
+                  <AdminStatusBadge
+                    status={method.status.charAt(0).toUpperCase() + method.status.slice(1)}
+                  />
                 </td>
-                <td className="p-3 border border-gray-600">
+                <td>
                   <button
                     onClick={() => openEditModal(method)}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-3 py-1 rounded mr-2"
+                    className="admin-btn admin-btn-secondary mr-2"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(method)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
+                    className="admin-btn admin-btn-danger"
                   >
                     Delete
                   </button>
@@ -178,20 +181,23 @@ const DepositMethod = () => {
               </tr>
             ))}
           </tbody>
-        </table>
-      )}
+        </AdminTable>
+      ) : null}
 
-      {/* Modal for Add/Edit */}
+      {!isLoading && !isError && apiData?.length === 0 ? (
+        <AdminCard>
+          <EmptyState text="No deposit methods configured yet." />
+        </AdminCard>
+      ) : null}
+
       {isDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
-          <div className="bg-gray-800 p-8 rounded-xl shadow-xl w-[800px] max-w-[90%] text-gray-200">
-            <h3 className="text-xl font-semibold mb-6 border-b border-gray-700 pb-3 text-center">
-              {editingMethod ? "Update Deposit Method" : "Add Deposit Method"}
-            </h3>
-
+        <AdminModal title={editingMethod ? "Update Deposit Method" : "Add Deposit Method"} onClose={() => {
+          setIsDialogOpen(false);
+          setEditingMethod(null);
+        }}>
             <form
               onSubmit={formik.handleSubmit}
-              className="grid grid-cols-3 gap-5"
+              className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
             >
               {[
                 {
@@ -233,21 +239,20 @@ const DepositMethod = () => {
                 { name: "charge", label: "Charge", placeholder: "e.g. 0.5" },
               ].map((field) => (
                 <div key={field.name}>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="admin-label">
                     {field.label}
                   </label>
                   <input
                     type="text"
                     {...formik.getFieldProps(field.name)}
                     placeholder={field.placeholder}
-                    className="w-full border border-gray-600 rounded-md p-2 bg-gray-900 text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="admin-input"
                   />
                 </div>
               ))}
 
-              {/* Status Field spans full width */}
-              <div className="col-span-3">
-                <label className="block text-sm font-medium mb-1">
+              <div className="col-span-full">
+                <label className="admin-label">
                   Status
                 </label>
                 <select
@@ -258,61 +263,45 @@ const DepositMethod = () => {
                     formik.setFieldValue("status", newStatus);
                     formik.setFieldValue("isActive", newStatus === "active");
                   }}
-                  className="w-full border border-gray-600 rounded-md p-2 bg-gray-900 text-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="admin-input"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
               </div>
 
-              {/* Action buttons */}
-              <div className="col-span-3 flex justify-end gap-4 pt-6 border-t border-gray-700 mt-6">
+              <div className="col-span-full mt-4 flex justify-end gap-3 border-t border-slate-700 pt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setIsDialogOpen(false);
                     setEditingMethod(null);
                   }}
-                  className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded transition"
+                  className="admin-btn admin-btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded transition"
+                  className="admin-btn admin-btn-primary"
                 >
                   {editingMethod ? "Update" : "Create"}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </AdminModal>
       )}
 
-      {/* Delete Confirmation Dialog */}
       {isDeleteDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
-          <div className="bg-gray-800 p-6 rounded-lg w-[300px] text-gray-200">
-            <h3 className="text-lg font-semibold mb-3">Confirm Delete</h3>
-            <p className="text-sm mb-4">This action cannot be undone.</p>
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={cancelDelete}
-                className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="Confirm Delete"
+          description="This action cannot be undone."
+          onCancel={cancelDelete}
+          onConfirm={confirmDelete}
+          confirmText="Delete"
+        />
       )}
-    </div>
+    </AdminPage>
   );
 };
 

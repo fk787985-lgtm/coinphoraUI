@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { parseISO, format } from "date-fns"; // Import necessary functions from date-fns
+import AdminPage from "../../../components/admin/AdminPage";
+import { StatCard } from "../../../components/admin/AdminCard";
+import AdminTable from "../../../components/admin/AdminTable";
+import { EmptyState, ErrorState, LoadingState } from "../../../components/admin/AdminStates";
 
 const baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -85,86 +89,88 @@ const TradeResults = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-gray-800 p-6">
-      <h2 className="text-3xl font-semibold text-white text-center mb-8">Trade Results</h2>
-
-      {/* Last Updated and Time Remaining */}
-      <div className="text-center text-white mb-6">
-        <p>
-          <strong>Last Updated:</strong> {lastUpdated ? formatDate(lastUpdated) : "N/A"} {/* Format the last updated time */}
-        </p>
-        <p>
-          <strong>Next Update:</strong> {nextUpdate ? formatDate(nextUpdate) : "N/A"} {/* Format the next update time */}
-        </p>
-        <p>
-          <strong>Time Remaining for Next Update:</strong>{" "}
-          {timeRemaining > 0 ? formatTimeRemaining(timeRemaining) : "00:00:00"}
-        </p>
+    <AdminPage
+      title="Trade Results"
+      subtitle="Monitor generated trade outcomes and countdown to the next automated update cycle."
+    >
+      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <StatCard label="Last Updated" value={lastUpdated ? formatDate(lastUpdated) : "N/A"} />
+        <StatCard label="Next Update" value={nextUpdate ? formatDate(nextUpdate) : "N/A"} />
+        <StatCard
+          label="Countdown"
+          value={timeRemaining > 0 ? formatTimeRemaining(timeRemaining) : "00:00:00"}
+        />
       </div>
 
-      <div className="overflow-x-auto bg-gray-700 p-6 rounded-lg">
-        <table className="min-w-full table-auto">
+      {isLoading ? (
+        <LoadingState text="Loading trade results..." />
+      ) : isError ? (
+        <ErrorState text="Failed to load trade results." />
+      ) : tradeResults ? (
+        <AdminTable>
           <thead>
-            <tr className="text-white">
-              <th className="p-4">Trade Result</th>
-              <th className="p-4">Buy Result (30s)</th>
-              <th className="p-4">Sell Result (30s)</th>
-              <th className="p-4">Buy Result (60s)</th>
-              <th className="p-4">Sell Result (60s)</th>
-              <th className="p-4">Buy Result (3m)</th>
-              <th className="p-4">Sell Result (3m)</th>
-              <th className="p-4">Buy Result (5m)</th>
-              <th className="p-4">Sell Result (5m)</th>
+            <tr>
+              <th>Trade Result</th>
+              <th>Buy Result (30s)</th>
+              <th>Sell Result (30s)</th>
+              <th>Buy Result (60s)</th>
+              <th>Sell Result (60s)</th>
+              <th>Buy Result (3m)</th>
+              <th>Sell Result (3m)</th>
+              <th>Buy Result (5m)</th>
+              <th>Sell Result (5m)</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-gray-600">
-              <td className="text-center text-white p-4">{nextUpdate ? formatDate(nextUpdate) : "N/A"}</td>
-              <td className="text-center text-white p-4">
-                <span className={tradeResults?.trade30Second?.buy?.tradeResult === "Win" ? "text-green-500" : "text-red-500"}>
+            <tr className="text-center">
+              <td>{nextUpdate ? formatDate(nextUpdate) : "N/A"}</td>
+              <td>
+                <span className={tradeResults?.trade30Second?.buy?.tradeResult === "Win" ? "text-emerald-400" : "text-rose-400"}>
                   {tradeResults?.trade30Second?.buy?.tradeResult}
                 </span>
               </td>
-              <td className="text-center text-white p-4">
-                <span className={tradeResults?.trade30Second?.sell?.tradeResult === "Win" ? "text-green-500" : "text-red-500"}>
+              <td>
+                <span className={tradeResults?.trade30Second?.sell?.tradeResult === "Win" ? "text-emerald-400" : "text-rose-400"}>
                   {tradeResults?.trade30Second?.sell?.tradeResult}
                 </span>
               </td>
-              <td className="text-center text-white p-4">
-                <span className={tradeResults?.trade60Second?.buy?.tradeResult === "Win" ? "text-green-500" : "text-red-500"}>
+              <td>
+                <span className={tradeResults?.trade60Second?.buy?.tradeResult === "Win" ? "text-emerald-400" : "text-rose-400"}>
                   {tradeResults?.trade60Second?.buy?.tradeResult}
                 </span>
               </td>
-              <td className="text-center text-white p-4">
-                <span className={tradeResults?.trade60Second?.sell?.tradeResult === "Win" ? "text-green-500" : "text-red-500"}>
+              <td>
+                <span className={tradeResults?.trade60Second?.sell?.tradeResult === "Win" ? "text-emerald-400" : "text-rose-400"}>
                   {tradeResults?.trade60Second?.sell?.tradeResult}
                 </span>
               </td>
-              <td className="text-center text-white p-4">
-                <span className={tradeResults?.trade3Min?.buy?.tradeResult === "Win" ? "text-green-500" : "text-red-500"}>
+              <td>
+                <span className={tradeResults?.trade3Min?.buy?.tradeResult === "Win" ? "text-emerald-400" : "text-rose-400"}>
                   {tradeResults?.trade3Min?.buy?.tradeResult}
                 </span>
               </td>
-              <td className="text-center text-white p-4">
-                <span className={tradeResults?.trade3Min?.sell?.tradeResult === "Win" ? "text-green-500" : "text-red-500"}>
+              <td>
+                <span className={tradeResults?.trade3Min?.sell?.tradeResult === "Win" ? "text-emerald-400" : "text-rose-400"}>
                   {tradeResults?.trade3Min?.sell?.tradeResult}
                 </span>
               </td>
-              <td className="text-center text-white p-4">
-                <span className={tradeResults?.trade5Min?.buy?.tradeResult === "Win" ? "text-green-500" : "text-red-500"}>
+              <td>
+                <span className={tradeResults?.trade5Min?.buy?.tradeResult === "Win" ? "text-emerald-400" : "text-rose-400"}>
                   {tradeResults?.trade5Min?.buy?.tradeResult}
                 </span>
               </td>
-              <td className="text-center text-white p-4">
-                <span className={tradeResults?.trade5Min?.sell?.tradeResult === "Win" ? "text-green-500" : "text-red-500"}>
+              <td>
+                <span className={tradeResults?.trade5Min?.sell?.tradeResult === "Win" ? "text-emerald-400" : "text-rose-400"}>
                   {tradeResults?.trade5Min?.sell?.tradeResult}
                 </span>
               </td>
             </tr>
           </tbody>
-        </table>
-      </div>
-    </div>
+        </AdminTable>
+      ) : (
+        <EmptyState text="No trade result data available." />
+      )}
+    </AdminPage>
   );
 };
 
