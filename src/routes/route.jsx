@@ -34,7 +34,6 @@ const TradingInterface = lazy(() =>
 import HomeOrOnchain from "../pages/HomeOrOnchain";
 
 import Loading from "../components/Loading";
-import ChatVisibilityHandler from "../components/ChatVisibilityHandler";
 
 import OnchainLayout from "../pages/OnchainLayout ";
 import {
@@ -366,14 +365,9 @@ export const routes = createBrowserRouter([
     path: "/helpline",
     element: (
       <Suspense fallback={<Loading />}>
-        {/* <AuthorizeUser> */}
-        {/* <ChatVisibilityHandler> */}
-
-          <OnchainLayout title="Helpline">
-            <Helpline />
-          </OnchainLayout>
-        {/* </ChatVisibilityHandler> */}
-        {/* </AuthorizeUser> */}
+        <OnchainLayout title="Helpline">
+          <Helpline />
+        </OnchainLayout>
       </Suspense>
     ),
   },

@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { MessageCircleMore } from "lucide-react";
 
-const TAWK_SCRIPT_ID = "tawk-chat-script";
-const TAWK_SRC = "https://embed.tawk.to/69d61b3c0d1c3f1c379982e6/1jlm5kpkn";
-
 const isTawkReady = () =>
   typeof window !== "undefined" &&
   window.Tawk_API &&
@@ -20,21 +17,6 @@ const TawkChatWidget = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
-
-    window.Tawk_API = window.Tawk_API || {};
-    window.Tawk_LoadStart = new Date();
-
-    const existingScript = document.getElementById(TAWK_SCRIPT_ID);
-
-    if (!existingScript) {
-      const script = document.createElement("script");
-      script.id = TAWK_SCRIPT_ID;
-      script.async = true;
-      script.src = TAWK_SRC;
-      script.charset = "UTF-8";
-      script.setAttribute("crossorigin", "*");
-      document.body.appendChild(script);
-    }
 
     const intervalId = setInterval(() => {
       if (isTawkReady()) {
